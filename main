@@ -1,0 +1,83 @@
+# parastate-node-setup
+This guide will show you, how can you setup a node on Parastate Testnet.
+1.Recommended Hardware Settings
+CPU: 2.0 GHz x86–64 CPU
+Memory: 8GB RAM
+Disk: 500GB High-Speed Storage (SSD)
+Ubuntu 18.04 or 20.04
+2.Setup
+We will make manual installation. Follow the codes.
+apt update
+apt install -y \
+software-properties-common \
+wget \
+cmake \
+ninja-build \
+curl \
+git \
+libboost-all-dev \
+llvm-dev \
+liblld-10-dev \
+clang
+# We must install node.js
+curl -sL https://deb.nodesource.com/setup_14.x | bash
+apt install -y nodejs
+#We must install yarn
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
+apt update && apt install -y yarn
+# We must install rust
+curl https://sh.rustup.rs -sSf | sh -s -- -y
+source $HOME/.cargo/env
+rustup update nightly && rustup update stable
+rustup target add wasm32-unknown-unknown --toolchain nightly
+3. Open ports
+We must open theese ports:30333, 9933 and 9944.
+Here the codes.
+Sudo ufw allow 30333 or sudo ufw allow 30333/tcp
+Sudo ufw allow 9933
+Sudo ufw allow 9944
+4.Generate keys
+We need generate keys to run a Parastate Node. First, we need install subkey tool and generate a key.
+# Install subkey tool
+curl https://getsubstrate.io -sSf | bash -s -- --fast
+cargo install --force subkey --git https://github.com/paritytech/substrate --version 2.0.1 --locked
+# Generate a mnemonic and see the sr25519 key and address
+subkey generate --scheme sr25519
+# Use the same mnemonic to see ed25519 key and address
+subkey inspect --scheme ed25519 "<Your Mnemonic>"
+These codes will give us a sr25519 and ed25519 keys.You must save them.
+5.Run Node
+This codes will start a node and connect to Parastate Testnet.  Change name place with your node name.
+git clone https://github.com/ParaState/frontier.git
+cd frontier
+cargo run — release — bin frontier-template-node — \
+— execution=Native \
+— base-path ./data \
+— chain ./specs/2021–04–22-spec-raw.json \
+— port 30333 \
+— rpc-port 9933 \
+— ws-port 9944 \
+— validator \
+— telemetry-url ‘wss://telemetry.polkadot.io/submit/ 0’ \
+— name ‘<Your Node Name>’ \
+— bootnodes /ip4/13.67.57.72/tcp/30333/p2p/12D3KooWNwpkJk3f4fUEc9cjSzLC5xE3opf25pjt7izfNGc1v5Tu
+
+After your node starts importing blocks, you could check your node status at Polkadot Telemetry.
+6.Add Your Key to Your ParaState Node
+After this, you setup a node at Parastate Testnet. Now, you should add your key to your Parastate Node. Stop your node and restart with RPC calls options. Follow this steps:
+· First, you need to stop your Parastate node. You can use Ctrl+C keys for this. After this, you need to enable ssh tunnel to the your server.
+ssh -N -L 9944:127.0.0.1:9944 root@xx.xx.xx.xx You should change xx with your node ip.
+Enter the your password and you will see empty window.
+· Restart your node.
+cargo run — release — bin frontier-template-node — \
+— execution=Native \
+— base-path ./data \
+— chain ./specs/2021–04–22-spec-raw.json \
+— port 30333 \
+— rpc-port 9933 \
+— ws-port 9944 \
+— validator \
+— telemetry-url ‘wss://telemetry.polkadot.io/submit/ 0’ \
+— name ‘your node name’ \
+— bootnodes /ip4/13.67.57.72/tcp/30333/p2p/12D3KooWNwpkJk3f4fUEc9cjSzLC5xE3opf25pjt7izfNGc1v5Tu
